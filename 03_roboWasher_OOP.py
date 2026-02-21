@@ -1,100 +1,156 @@
-from dataclasses import dataclass
-from typing import Optional 
+from enum import Enum
+
+# поскольку базовое ООП-решение уже реализовано в первом задании, 
+# здесь пробую дальше оформлять логику при помощи именования + разводить данные и обработку с помощью классов
+ 
+# отдельная структура для режимов работы
+class CleaningMode(str, Enum):
+    WATER = "water"
+    SOAP = "soap"
+    BRUSH = "brush"
+
 import math
-
-@dataclass
-class Command:
-    name: str
-    arg: Optional[float] = None
-
+from typing import Callable
 
 class Robot:
-    def __init__(self):
+    # здесь ещё более явно упаковываем обработку разных видов команд с разным набором аргументов с помощью Callable
+    def __init__(self, emit: Callable[[str], None] = print):
         self.x = 0.0
         self.y = 0.0
         self.angle = 0.0
-        self.mode = "water"
+        self.mode = CleaningMode.WATER
         self.is_cleaning = False
+        self.emit = emit
 
+    def move(self, distance: float):
+        rad = math.radians(self.angle)
+        self.x += distance * math.cos(rad)
+        self.y += distance * math.sin(rad)
 
-    def move(self, distance: float): 
-        # move code
-        radians = math.radians(self.angle)
-        self.x += distance * math.cos(radians)
-        self.y += distance * math.sin(radians)
-
-        print(f"POS {self.x:.2f}, {self.y:.2f}")
-
+        # в этой и последующих функциях оставляем интерфейс под возможное изменение вывода - не просто print, а print внутри отдельной команды
+        self.emit(f"POS {self.x:.2f}, {self.y:.2f}")
 
     def turn(self, rotation_angle: float):
         self.angle = (self.angle + rotation_angle) % 360.0
+        self.emit(f"ANGLE {self.angle:.2f}")
 
-        print(f"ANGLE {self.angle:.2f}")
+    def set_mode(self, mode: CleaningMode):
+        self.mode = mode
+        self.emit(f"STATE {self.mode.value}")
 
-    
-    def set(self, mode: str):
-        self.mode = mode 
-        # считаем, что можно менять режим на лету
-        print(f"STATE {self.mode}")
-
-
-    def start(self, _=None):
+    def start(self):
         self.is_cleaning = True
+        self.emit(f"START WITH {self.mode.value}")
 
-        print(f"START WITH {self.mode}")
-    
-
-    def stop(self, _=None):
+    def stop(self):
         self.is_cleaning = False
-        print(f"STOP")
+        self.emit("STOP")
 
 
+# пробую добавить паттерн Command , как его понял
+# делаем команды отдельным слоем, все пять - единообразны
+
+from dataclasses import dataclass
+from abc import ABC, abstractmethod
+
+# явно обозначить контракт для всех команд
+class Command(ABC):
+    @abstractmethod
+    def execute(self, robot: Robot) -> None: ...
+
+@dataclass(frozen=True)
+class Move(Command):
+    distance: float
+    def execute(self, robot: Robot) -> None:
+        robot.move(self.distance)
+
+@dataclass(frozen=True)
+class Turn(Command):
+    rotation_angle: float
+    def execute(self, robot: Robot) -> None:
+        robot.turn(self.rotation_angle)
+
+@dataclass(frozen=True)
+class Set(Command):
+    mode: CleaningMode
+    def execute(self, robot: Robot) -> None:
+        robot.set_mode(self.mode)
+
+@dataclass(frozen=True)
+class Start(Command):
+    def execute(self, robot: Robot) -> None:
+        robot.start()
+
+@dataclass(frozen=True)
+class Stop(Command):
+    def execute(self, robot: Robot) -> None:
+        robot.stop()
+
+# пытаемся далее аналитически разложить сопоставление ввода с внутренним представлением робота на отдельные элементы
+# вместо одной parse_command теперь:
+# lex (для превращения строки в токены)
+
+from dataclasses import dataclass
+
+def lex(line: str) -> list[str]:
+    line = line.strip()
+    if not line:
+        raise ValueError("command is empty")
+    return line.split()
+
+# parse_syntax c отдельным датаклассом (для разбора команд на одно- и двухаргументные)
+@dataclass(frozen=True)
+class Parsed:
+    name: str
+    arg: str | None
+
+def parse_syntax(tokens: list[str]) -> Parsed:
+    name = tokens[0].lower()
+
+    if name in ("start", "stop"):
+        if len(tokens) != 1:
+            raise ValueError(f"'{name}' takes no arguments")
+        return Parsed(name=name, arg=None)
+
+    if len(tokens) != 2:
+        raise ValueError(f"'{name}' expects exactly 1 argument")
+    return Parsed(name=name, arg=tokens[1])
+
+# parse_semantics - для итогового спосоставления ввода с внутренним представлением программы
+def parse_semantics(p: Parsed) -> Command:
+    if p.name == "start":
+        return Start()
+    if p.name == "stop":
+        return Stop()
+
+    assert p.arg is not None 
+
+    if p.name == "move":
+        return Move(float(p.arg))
+    if p.name == "turn":
+        return Turn(float(p.arg))
+    if p.name == "set":
+        mode = p.arg.lower()
+        return Set(CleaningMode(mode))
+
+    raise ValueError(f"command is unfamiliar {p.name}")
+
+# и parse_command теперь собирает вместе работу этих трёх команд
+def parse_command(line: str) -> Command:
+    tokens = lex(line)
+    parsed = parse_syntax(tokens)
+    return parse_semantics(parsed)
+
+# Interpreter теперь нужен только в качестве обёртки над run - то есть это финальная точка, где мы из ввода и внутреннего представления получаем некоторое действие
 class Interpreter:
     def __init__(self, robot: Robot):
         self.robot = robot
-        self.available_commands = {
-        "move": robot.move, 
-        "turn": robot.turn,
-        "set": robot.set,
-        "start": robot.start, 
-        "stop": robot.stop
-    }
 
-    def parse_command(self, line: str) -> Command:
-        line = line.strip()
-        if not line:
-            raise ValueError("comand is empty")
-        line_halves = line.split()
-        command_name = line_halves[0].lower()
+    def run(self, program_lines: list[str]) -> None:
+        for line in program_lines:
+            cmd = parse_command(line)
+            cmd.execute(self.robot)
 
-        if command_name not in ("move", "turn", "set", "start", "stop"):
-            raise ValueError("command is unfamiliar")
-        
-        if command_name in ("start", "stop"):
-            if len(line_halves) != 1:
-                raise ValueError("command have no arguments")
-            return Command(name=command_name, arg=None)
-        
-        if len(line_halves) != 2:
-            raise ValueError("there is only one argument")
-        
-        if command_name in ('move', 'turn'): 
-            try:
-                command_arg = float(line_halves[1])
-            except:
-                raise ValueError(f"{line_halves[1]} is not compatible with move or turn commands")
-            return Command(name=command_name, arg=command_arg)
-
-        if command_name == "set":
-            mode = line_halves[1].lower()
-            if line_halves[1] not in ("water", "soap", "brush"):
-                raise ValueError(f"{line_halves[1]} not applicable for mode command")
-            return Command(name=command_name, arg=mode)
-    
-    def run(self, command_strings: list[str]):
-        for command_string in command_strings:
-            cmd = self.parse_command(command_string)
-            self.available_commands[cmd.name](cmd.arg)
 
 if __name__ == "__main__":
     test_program = ["move 100", "turn -90", "set soap", "start", "move 50", "stop"]
