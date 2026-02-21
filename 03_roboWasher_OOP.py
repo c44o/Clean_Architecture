@@ -98,7 +98,7 @@ def lex(line: str) -> list[str]:
         raise ValueError("command is empty")
     return line.split()
 
-# parse_syntax c отдельным датаклассом (для разбора команд на одно- и двухаргументные)
+# parse_syntax c отдельным датаклассом (для разбора команд на одно- и двухэлементные)
 @dataclass(frozen=True)
 class Parsed:
     name: str
