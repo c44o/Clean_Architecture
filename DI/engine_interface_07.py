@@ -1,8 +1,9 @@
 from __future__ import annotations
-from typing import Protocol, Callable, Any
+from typing import Protocol, Callable, TypeVar
 
-State = Any
-Transfer = Callable[[Any], None]
+Message = object
+Transfer = Callable[[Message], None]
+State = TypeVar("State")
 
 class RobotEngine(Protocol):
     def move(self, transfer: Transfer, distance: int, state: State) -> State: ...
