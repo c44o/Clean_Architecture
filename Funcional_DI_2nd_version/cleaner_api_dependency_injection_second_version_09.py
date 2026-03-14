@@ -21,7 +21,8 @@ def apply_pure(transfer, state, command: str):
 class RobotApi:
     # одна f_apply вместо пяти разных функций из 
     # def setup(self, f_move,f_turn,f_set_state,f_start,f_stop, f_transfer):
-    # а диспатч команд теперь в отдельной apply_pure
+    # а диспатч команд теперь в отдельной apply_pure.
+    
     def setup(self, f_apply, f_transfer):
         self.f_apply = f_apply
         self.f_transfer = f_transfer
