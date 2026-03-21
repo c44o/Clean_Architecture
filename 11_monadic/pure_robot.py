@@ -8,7 +8,6 @@ WATER = 1 # полив водой
 SOAP  = 2 # полив мыльной пеной
 BRUSH = 3 # чистка щётками
 
-
 # взаимодействие с роботом вынесено в отдельную функцию
 def transfer_to_cleaner(message):
     print (message)
