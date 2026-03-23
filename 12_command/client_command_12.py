@@ -11,7 +11,6 @@ def main():
         StopCommand(),
     ]
 
-
     executor = CommandExecutor()
     final_state = executor.execute_all(commands)
 
