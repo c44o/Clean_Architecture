@@ -12,7 +12,6 @@ from event_sourcing_robot_13 import (
 
 def main():
     robot_id = "robot_1"
-
     store = InMemoryEventStore()
     handler = CommandHandler(store)
 
