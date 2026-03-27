@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import List, Union
 import pure_robot
 
-
 # что нужно сделать
 
 @dataclass
