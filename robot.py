@@ -6,6 +6,7 @@ BASIC_ROBOT_STEP = 50
 def default_transfer(message):
     print(message)
 
+
 class Robot:
     def __init__(self, transfer=default_transfer):
         self._transfer = transfer
