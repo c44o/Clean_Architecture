@@ -7,7 +7,6 @@ WATER = 1
 SOAP = 2
 BRUSH = 3
 
-
 class MoveResponse:
     OK = "MOVE_OK"
     BARRIER = "HIT_BARRIER"
