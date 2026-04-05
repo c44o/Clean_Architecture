@@ -12,6 +12,7 @@ class CleaningMode(str, Enum):
 import math
 from typing import Callable
 
+
 class Robot:
     # здесь ещё более явно упаковываем обработку разных видов команд с разным набором аргументов с помощью Callable
     def __init__(self, emit: Callable[[str], None] = print):
