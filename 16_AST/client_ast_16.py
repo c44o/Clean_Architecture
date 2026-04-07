@@ -7,7 +7,6 @@ from ast_robot_16 import (
     RobotInterpreter,
 )
 
-
 def build_program():
     return Move(
         100,
