@@ -2,7 +2,6 @@ from robot_impl import *
 
 robot0 = Robot.create()
 print(robot0)
-
 move_result = robot0.move(100)
 robot1 = move_result.robot
 print(move_result)
