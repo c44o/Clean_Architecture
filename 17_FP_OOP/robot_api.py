@@ -10,6 +10,7 @@ print(robot1)
 robot2 = robot1.turn(-90)
 print(robot2)
 
+
 mode_result = robot2.set_mode(CleaningMode.SOAP)
 robot3 = mode_result.robot
 print(mode_result)
