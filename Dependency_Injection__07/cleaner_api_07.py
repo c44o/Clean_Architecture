@@ -7,6 +7,7 @@ class CleanerApi:
         self.transfer = transfer
         self.state = pure_robot.RobotState(0.0, 0.0, 0, pure_robot.WATER)
 
+    
     def activate_cleaner(self, code):
         for command in code:
             cmd = command.split(" ")
