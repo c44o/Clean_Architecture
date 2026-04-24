@@ -8,6 +8,7 @@ from state_monad_robot_13 import (
     stop_m,
 )
 
+
 def main():
     transfer = pure_robot.transfer_to_cleaner
 
