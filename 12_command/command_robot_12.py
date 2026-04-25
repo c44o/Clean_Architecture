@@ -1,5 +1,6 @@
 import pure_robot
 
+
 class Command:
     def execute(self, transfer, state):
         raise NotImplementedError("в интерфесе метод обозначен, а не реализован")
