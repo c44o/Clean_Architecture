@@ -5,7 +5,6 @@ class Command:
     def execute(self, transfer, state):
         raise NotImplementedError("в интерфесе метод обозначен, а не реализован")
     
-
 class MoveCommand(Command):
     def __init__(self, distance):
         self.distance = distance
